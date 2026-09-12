@@ -44,6 +44,8 @@ wget https://gu-st.ru/content/lending/russian_trusted_sub_ca_pem.crt
 --days — за сколько дней предупреждать. По умолчанию 30.
 
 ## Пример вывода 
+<img width="939" height="216" alt="image" src="https://github.com/user-attachments/assets/794593e7-fa24-410b-aab3-e6a7e6030a24" />
+
 <img width="1187" height="183" alt="image" src="https://github.com/user-attachments/assets/b3d876e5-0e02-43f2-9324-3ffe26993c20" />
 
 
