@@ -1,0 +1,16 @@
+# секреты
+.env
+config.ini
+
+# питоновский мусор
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# логи
+*.log
+logs/
+
+# временные файлы
+*.tmp
