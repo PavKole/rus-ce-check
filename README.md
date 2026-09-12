@@ -43,7 +43,9 @@ wget https://gu-st.ru/content/lending/russian_trusted_sub_ca_pem.crt
 `python ch_ssl.py --file domains.txt --days 30`
 --days — за сколько дней предупреждать. По умолчанию 30.
 
-## Пример вывода #вставлю скрин 
+## Пример вывода 
+<img width="1187" height="183" alt="image" src="https://github.com/user-attachments/assets/b3d876e5-0e02-43f2-9324-3ffe26993c20" />
+
 
 # Ограничения
 Сайты с GOST TLS не проверяются: стандартный Python ssl их не понимает, нужна отдельная библиотека (например, pycads или gostcrypto). Пока не делал — не было задачи.
