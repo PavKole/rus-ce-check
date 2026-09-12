@@ -35,8 +35,10 @@ wget https://gu-st.ru/content/lending/russian_trusted_sub_ca_pem.crt
 #### Если не хочешь уведомления — просто не создавай .env.
 
 # Запуск
+
 Проверить один домен:
 `python ch_ssl.py --domain gosuslugi.ru --days 30`
+
 Проверить список:
 `python ch_ssl.py --file domains.txt --days 30`
 --days — за сколько дней предупреждать. По умолчанию 30.
