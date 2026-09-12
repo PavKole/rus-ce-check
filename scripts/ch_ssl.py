@@ -20,19 +20,18 @@ import requests
 
 # --- настройки ---
 
-# сюда кидаем корневые сертификаты Минцифры
+# тут сертификаты Минцифры
 CERTS_DIR = Path(__file__).parent / "certs"
 ROOT_CA = CERTS_DIR / "russian_trusted_root_ca_pem.crt"
 
-# телеграм - если нужно уведомление
-TG_TOKEN = None  # читаем из .env, если есть
+# уведомление в TG
+TG_TOKEN = None 
 TG_CHAT_ID = None
 
-TIMEOUT = 10  # сек, чтобы не висеть на мёртвых доменах
+TIMEOUT = 10  
 
 
 def load_env():
-    """Читаю токены из .env, если он есть. Просто чтобы не хардкодить."""
     env_file = Path(__file__).parent / ".env"
     if not env_file.exists():
         return
@@ -50,11 +49,6 @@ def load_env():
 
 
 def make_ssl_context():
-    """
-    Собираю SSL-контекст.
-    Тут главный момент: по умолчанию Python не доверяет российским корням,
-    поэтому приходится подсовывать сертификат Минцифры вручную.
-    """
     ctx = ssl.create_default_context()
     if ROOT_CA.exists():
         try:
@@ -67,9 +61,6 @@ def make_ssl_context():
 
 
 def get_cert(host, port=443):
-    """
-    Возвращает словарь с инфой о сертификате или None при ошибке.
-    """
     ctx = make_ssl_context()
     try:
         with socket.create_connection((host, port), timeout=TIMEOUT) as sock:
@@ -89,24 +80,11 @@ def get_cert(host, port=443):
 
 
 def parse_date(s):
-    """notAfter приходит в формате 'Sep 12 12:00:00 2026 GMT'."""
-    # убираем GMT, fromisoformat его не переваривает
     s = s.replace(" GMT", "").strip()
-    # иногда секунд нет (редко), но у нас обычно есть
-    for fmt in ("%b %d %H:%M:%S %Y", "%b %d %H:%M:%S %Y"):
-        try:
-            return datetime.strptime(s, fmt).replace(tzinfo=timezone.utc)
-        except ValueError:
-            continue
-    raise ValueError(f"не смог разобрать дату: {s}")
+    return datetime.strptime(s, "%b %d %H:%M:%S %Y").replace(tzinfo=timezone.utc)
 
 
 def is_russian_cert(cert):
-    """
-    Пытаюсь понять, выдан ли сертификат российским УЦ.
-    Признак простой: в issuer есть 'Russian Trusted'.
-    Точнее можно было бы парсить цепочку, но для дома и так сойдёт.
-    """
     issuer = dict(x[0] for x in cert.get("issuer", []))
     cn = issuer.get("commonName", "")
     return "Russian Trusted" in cn
@@ -119,7 +97,6 @@ def days_left(expiry):
 
 
 def send_telegram(msg):
-    """Отправка в телегу. Если токены не заданы - просто молчу."""
     if not TG_TOKEN or not TG_CHAT_ID:
         return
     url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
@@ -132,10 +109,6 @@ def send_telegram(msg):
 
 
 def check_domain(domain, threshold):
-    """
-    Проверяет один домен.
-    Возвращает True, если всё ок, False если надо срочно что-то делать.
-    """
     print(f"\n=== {domain} ===")
     cert = get_cert(domain)
     if not cert:
@@ -150,23 +123,23 @@ def check_domain(domain, threshold):
     left = days_left(expiry)
     ru = is_russian_cert(cert)
 
-    tag = "🇷🇺" if ru else "🌍"
+    tag = "🇷🇺" if ru else "World"
     print(f"  выдан: {tag} {'Минцифры' if ru else 'иностранный УЦ'}")
     print(f"  истекает: {expiry.strftime('%Y-%m-%d %H:%M UTC')}")
     print(f"  осталось: {left} дн.")
 
     if left < 0:
-        msg = f"❌ {domain}: сертификат ПРОСРОЧЕН!"
+        msg = f"X {domain}: сертификат ПРОСРОЧЕН!"
         print(msg)
         send_telegram(msg)
         return False
     elif left <= threshold:
-        msg = f"⚠️ {domain}: сертификат истекает через {left} дн. {'(Минцифры)' if ru else ''}"
+        msg = f"ALLARM {domain}: сертификат истекает через {left} дн. {'(Минцифры)' if ru else ''}"
         print(msg)
         send_telegram(msg)
         return False
     else:
-        print("  пока норм")
+        print("  OK")
         return True
 
 
